@@ -37,8 +37,12 @@ public function show($id)
     $arsitektur = $perkembangan->pluck('arsitektur')->toArray();
     $tambah_kurang = $perkembangan->pluck('tambah_kurang')->toArray();
     $total = $perkembangan->pluck('total_progres')->toArray();
-    
-    $dokumentasi = DokumentasiFoto::where('proyek_id', $id)->get();
+
+    // $dokumentasi = DokumentasiFoto::where('proyek_id', $id)->get();
+    $dokumentasi = DokumentasiFoto::where('proyek_id', $id)
+            ->orderBy('minggu_ke')
+            ->get()
+            ->groupBy('minggu_ke');
 
     return view('owner.perkembangan.view', compact(
         'proyek', 'labels', 'struktur', 'arsitektur', 'tambah_kurang', 'total', 'dokumentasi'
