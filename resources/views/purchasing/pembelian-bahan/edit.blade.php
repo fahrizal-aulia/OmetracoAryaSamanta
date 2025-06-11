@@ -7,6 +7,14 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @endif
+
+@if (session('wa_link'))
+    <script>
+        window.open("{{ session('wa_link') }}", "_blank");
+    </script>
+@endif
+
+
 <div class="container">
     <h4>Edit Permintaan Pembelian</h4>
 

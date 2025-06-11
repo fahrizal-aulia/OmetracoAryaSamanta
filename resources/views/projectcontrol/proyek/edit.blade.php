@@ -251,6 +251,10 @@
             <input type="text" name="lokasi" id="lokasi" value="{{ old('lokasi', $proyek->lokasi) }}">
             @error('lokasi') <div class="error">{{ $message }}</div> @enderror
 
+            <label for="nomer_control">Nomer HP Project Control</label>
+            <input type="text" name="nomer_control" id="nomer_control" value="{{ old('nomer_control', $proyek->nomer_control) }}">
+            @error('nomer_control') <div class="error">{{ $message }}</div> @enderror
+
             <label for="tanggal_mulai">Tanggal Mulai</label>
             <input type="date" name="tanggal_mulai" id="tanggal_mulai" value="{{ old('tanggal_mulai', $proyek->tanggal_mulai) }}">
             @error('tanggal_mulai') <div class="error">{{ $message }}</div> @enderror

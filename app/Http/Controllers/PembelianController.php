@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use App\Models\Pembelian;
 use App\Models\DetailPembelianMaterial;
 use App\Models\Proyek;
 use Carbon\Carbon;
+
 
 class PembelianController extends Controller
 {
@@ -150,23 +152,52 @@ class PembelianController extends Controller
     }
 
     // ✅ Tambahan: Validasi
-    public function validasi($id)
-    {
-        $pembelian = Pembelian::findOrFail($id);
-        $pembelian->status = 'Disetujui';
-        $pembelian->save();
+public function validasi($id)
+{
+    $pembelian = Pembelian::with(['materials', 'proyek'])->findOrFail($id);
+    $pembelian->status = 'Disetujui';
+    $pembelian->save();
 
-        return redirect()->back()->with('success', 'Pembelian berhasil divalidasi.');
+    // Ambil nomor WA dan detail proyek
+    $proyek = $pembelian->proyek;
+    $nomor_wa =  $proyek->nomer_control;
+
+    // Format nomor WA
+    if (str_starts_with($nomor_wa, '0')) {
+        $nomor_wa = '62' . substr($nomor_wa, 1);
+    } else {
+        $nomor_wa = $nomor_wa;
     }
 
-    public function batalValidasi($id)
-    {
-        $pembelian = Pembelian::findOrFail($id);
-        $pembelian->status = 'Ditolak';
-        $pembelian->save();
+    // Susun pesan
+    $pesan = "Pembelian Bahan Material ID : {$pembelian->id}, Nama proyek : {$proyek->nama}, pada tanggal " .
+              \Carbon\Carbon::parse($pembelian->tanggal_permintaan)->format('d F Y') . " pembelian bahan material telah diterima\n";
+    $pesan .= "Detail bahan material :\n";
 
-        return redirect()->back()->with('success', 'Validasi pembelian dibatalkan.');
+    foreach ($pembelian->materials as $material) {
+        $pesan .= "- {$material->nama_material} : {$material->jumlah} {$material->satuan}\n";
     }
+
+    $pesan .= "Pengiriman akan dilakukan mohon ditunggu";
+
+    Log::info("Pesan WA ke {$nomor_wa}:\n" . $pesan);
+
+    // Arahkan ke WhatsApp Web
+    $pesan_encoded = urlencode($pesan);
+    $wa_link = "https://wa.me/{$nomor_wa}?text={$pesan_encoded}";
+    return redirect()->back()->with('wa_link', $wa_link);
+}
+
+
+public function batalValidasi($id)
+{
+    $pembelian = Pembelian::findOrFail($id);
+    $pembelian->status = 'Ditolak'; // Atau 'belum divalidasi' sesuai kebutuhan
+    $pembelian->save();
+
+    return redirect()->back()->with('info', 'Validasi dibatalkan.');
+}
+
 
     public function indexPurchasing(Request $request)
 {

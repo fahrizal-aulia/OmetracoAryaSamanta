@@ -23,12 +23,14 @@ class ProjectControlController extends Controller
             'lokasi' => 'required',
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
+            'nomer_control' => 'required',
         ]);
 
-        Proyek::create($request->only('nama', 'lokasi', 'tanggal_mulai', 'tanggal_selesai'));
+        Proyek::create($request->only('nama', 'lokasi', 'tanggal_mulai', 'tanggal_selesai', 'nomer_control'));
 
         return redirect()->route('projectcontrol.proyek.index')->with('success', 'Proyek berhasil ditambahkan.');
     }
+
      public function edit($id)
     {
         $proyek = Proyek::findOrFail($id);
@@ -39,12 +41,13 @@ class ProjectControlController extends Controller
         $request->validate([
             'nama' => 'required',
             'lokasi' => 'required',
+            'nomer_control' => 'required|numeric|digits_between:8,15',
             'tanggal_mulai' => 'required|date',
-            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
+            'tanggal_selesai' => 'required',
         ]);
 
         $proyek = Proyek::findOrFail($id);
-        $proyek->update($request->only('nama', 'lokasi', 'tanggal_mulai', 'tanggal_selesai'));
+        $proyek->update($request->only('nama', 'lokasi', 'tanggal_mulai', 'tanggal_selesai', 'nomer_control'));
 
         return redirect()->route('projectcontrol.proyek.index')->with('success', 'Proyek berhasil diperbarui.');
     }

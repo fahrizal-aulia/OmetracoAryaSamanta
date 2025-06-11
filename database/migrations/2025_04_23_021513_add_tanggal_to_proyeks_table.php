@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::table('proyeks', function (Blueprint $table) {
             $table->date('tanggal_mulai')->nullable();
             $table->date('tanggal_selesai')->nullable();
+            $table->string('nomer_control')->nullable();
+
         });
     }
 
