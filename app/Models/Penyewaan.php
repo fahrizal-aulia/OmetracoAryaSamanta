@@ -27,5 +27,10 @@ class Penyewaan extends Model
 {
     return $this->hasMany(AlatPenyewaan::class);
 }
+public function proyek()
+{
+    return $this->belongsTo(Proyek::class);
+}
+
 
 }

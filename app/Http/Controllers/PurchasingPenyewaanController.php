@@ -7,6 +7,8 @@ use App\Models\AlatPenyewaan;
 use Illuminate\Http\Request;
 use App\Models\Proyek;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class PurchasingPenyewaanController extends Controller
 {
@@ -151,14 +153,49 @@ class PurchasingPenyewaanController extends Controller
         return redirect()->route('penyewaan.index')->with('success', 'Data penyewaan berhasil dihapus.');
     }
 
-    public function validasi($id)
-    {
-        $penyewaan = Penyewaan::findOrFail($id);
-        $penyewaan->status = 'disetujui';
-        $penyewaan->save();
 
-        return redirect()->back()->with('success', 'Penyewaan alat proyek berhasil divalidasi (disetujui).');
+
+public function validasi($id)
+{
+    $penyewaan = Penyewaan::with(['alatPenyewaan', 'proyek'])->findOrFail($id);
+    $penyewaan->status = 'disetujui';
+    $penyewaan->save();
+
+    $proyek = $penyewaan->proyek;
+    $nomor_wa = $proyek->nomer_control;
+
+    // Format nomor WA Indonesia
+    if (str_starts_with($nomor_wa, '0')) {
+        $nomor_wa = '62' . substr($nomor_wa, 1);
     }
+
+    // Buat isi pesan WA
+    $pesan = "Penyewaan Alat ID : {$penyewaan->id} proyek {$proyek->nama} pada tanggal " .
+             \Carbon\Carbon::parse($penyewaan->tanggal_permintaan)->format('d F Y') . " penyewaan alat diterima.\n";
+    $pesan .= "Detail daftar alat proyek:\n";
+
+    foreach ($penyewaan->alatPenyewaan as $alat) {
+        $pesan .= "- {$alat->nama_alat} : {$alat->jumlah_alat} {$alat->satuan}\n";
+    }
+
+    $pesan .= "Pengiriman akan dilakukan mohon ditunggu.";
+
+    // Kirim ke Fonnte
+    $token = config('services.fonnte.token');
+
+    $response = Http::withHeaders([
+        'Authorization' => $token,
+    ])->asForm()->post('https://api.fonnte.com/send', [
+        'target' => $nomor_wa,
+        'message' => $pesan,
+    ]);
+
+    // Log respon
+    Log::info("Fonnte WA Validasi Penyewaan: " . $response->body());
+
+    return redirect()->back()->with('success', 'Penyewaan alat proyek berhasil divalidasi dan pesan WA dikirim.');
+}
+
 
     public function batalkanValidasi($id)
     {

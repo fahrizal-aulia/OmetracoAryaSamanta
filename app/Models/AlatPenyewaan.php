@@ -30,5 +30,9 @@ class AlatPenyewaan extends Model
     {
         return $this->hasMany(PenyewaanAlatDetail::class, 'penyewaan_id');
     }
+    public function proyek()
+{
+    return $this->belongsTo(Proyek::class);
+}
 
 }
